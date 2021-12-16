@@ -42,7 +42,7 @@ const generateId = () => {
   return maxId + 1
 }
 
-
+app.use(express.static('build'))
 
 // app.get('/', (request, response) => {
 //   response.send('<h1>Hello World!</h1>')
