@@ -6,34 +6,42 @@ if (process.argv.length < 3) {
 }
 
 const password = process.argv[2]
-
+const firstName = process.argv[3]
+const lastName = process.argv[4]
+const phone = process.argv[5]
+console.log(process)
 const url =
-  `mongodb+srv://gelu:${password}@cluster0.ubq0q.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`
+  `mongodb+srv://gelu:${password}@myfirstcluster.ja4gd.mongodb.net/MyFirstCluster?retryWrites=true&w=majority`
 
 mongoose.connect(url)
 
 const personSchema = new mongoose.Schema({
-  content: String,
-  date: Date,
-  important: Boolean,
   name: String,
-  number: Number,
+  number: String,
   date: Date,
   important: Boolean,
-  id: String
+  id: Number
 })
 
-const Person = mongoose.model('Note', personSchema)
-
+const Person = mongoose.model('Person', personSchema)
 const person = new Person({
-  name: person.name,
-  number: person.number,
+  name: `${firstName} ${lastName}`,
+  number: phone,
   date: new Date().toISOString(),
-  important: person.important || false,
-  id: generateId()
+  important: false,
 })
 
-person.save().then(result => {
-  console.log('person saved!')
+if (firstName && lastName && phone) {
+  person.save().then(result => {
+    console.log(`Added ${firstName} number ${phone} to phonebook `)
+    mongoose.connection.close()
+  })
+}
+
+Person.find({}).then(result => {
+  console.log('phonebook:')
+  result.map(person => {
+    console.log(`${person.name} ${person.number}`)
+  })
   mongoose.connection.close()
 })
