@@ -9,7 +9,7 @@ const password = process.argv[2]
 const firstName = process.argv[3]
 const lastName = process.argv[4]
 const phone = process.argv[5]
-console.log(process)
+
 const url =
   `mongodb+srv://gelu:${password}@myfirstcluster.ja4gd.mongodb.net/MyFirstCluster?retryWrites=true&w=majority`
 
