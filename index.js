@@ -55,7 +55,17 @@ app.get('/api/persons/:id', (request, response, next) => {
   Person.findById(request.params.id)
     .then(person => {
       if (person) {
-        response.json(person)
+        response.send(`
+        {
+        <pre>
+        <strong>id:</strong> <span style="color:green; font-weight:900;">${request.params.id}</span>
+        <strong>name:</strong> <span style="color:green; font-weight:900;">${person.name}</span>
+        <strong>number:</strong> <span style="color:green; font-weight:900;">${person.number}</span>
+        <strong>date:</strong> <span style="color:green; font-weight:900;">${person.date}</span>
+        <strong>important:</strong><span style="color:green; font-weight:900;"> ${person.important}</span>
+        </pre>
+        }
+        `)
       } else {
         response.status(404).end()
       }
@@ -83,6 +93,12 @@ app.delete('/api/persons/:id', (request, response, next) => {
     })
     .catch(error => next(error))
 })
+app.get('/api/info', (request, response) => {
+  response.send(`
+  <h2>Phonebook has info for ${Person.length} people</h2>
+  <h3>${new Date()}<h3>
+  `)
+})
 
 const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: 'unknown endpoint' })
@@ -100,12 +116,6 @@ const errorHandler = (error, request, response, next) => {
 
 app.use(errorHandler)
 
-app.get('/api/info', (request, response) => {
-  response.send(`
-  <h2>Phonebook has info for ${persons.length} people</h2>
-  <h3>${new Date()}<h3>
-  `)
-})
 
 const PORT = process.env.PORT | 5000
 app.listen(PORT)
