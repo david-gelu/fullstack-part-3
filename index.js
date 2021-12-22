@@ -33,6 +33,9 @@ app.post('/api/persons', (request, response) => {
   if (body.name === undefined) {
     return response.status(400).json({ error: 'name is missing' })
   }
+  if (body.number === undefined) {
+    return response.status(400).json({ error: 'number is missing' })
+  }
 
   const person = new Person({
     name: body.name,
@@ -48,31 +51,37 @@ app.post('/api/persons', (request, response) => {
 
 })
 
-app.get('/api/persons/:id', (request, response) => {
-  Person.find(request.body.id).then(person => {
-    response.json(person)
-  })
+app.get('/api/persons/:id', (request, response, next) => {
+  Person.findById(request.params.id)
+    .then(person => {
+      if (person) {
+        response.json(person)
+      } else {
+        response.status(404).end()
+      }
+    })
+    .catch(error => next(error))
 })
 
-app.put('/api/persons/:id', (request, response) => {
+app.put('/api/persons/:id', (request, response, next) => {
   const paramBody = request.params
   const reqBody = request.body
   const resBody = response.req.body
   Person.findByIdAndUpdate(paramBody.id, { $set: { number: resBody.number } }, { new: true },
     (error, data) => {
-      error ? console.log(error)
-        : response.status(200).send(data)
-      // console.log(`Update phone number ${resBody.number} for username ${reqBody.name} with success`)
+      if (error) error => next(error)
+      else response.status(200).send(data)
+      console.log(`Update phone number ${resBody.number} for username ${reqBody.name} with success`)
     })
 })
 
-app.delete('/api/persons/:id', (request, response) => {
+app.delete('/api/persons/:id', (request, response, next) => {
   const body = request.params
   Person.findByIdAndRemove(body.id)
     .then(() => {
       response.status(200).end()
     })
-    .catch(error => console.log(error))
+    .catch(error => next(error))
 })
 
 const unknownEndpoint = (request, response) => {
@@ -81,6 +90,15 @@ const unknownEndpoint = (request, response) => {
 
 app.use(unknownEndpoint)
 
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  }
+  next(error)
+}
+
+app.use(errorHandler)
 
 app.get('/api/info', (request, response) => {
   response.send(`
