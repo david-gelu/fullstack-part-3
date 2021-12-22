@@ -8,13 +8,13 @@ app.use(cors())
 const mongoose = require('mongoose')
 const Person = require('./models/person.js')
 
-// const requestLogger = (request, response, next) => {
-//   const bodyStr = JSON.stringify(request.body)
-//   const requestData = `${request.method} ${request.path} ${response.statusCode} - ${process.uptime()} ms ${bodyStr}`
-//   console.log(requestData)
-//   next()
-// }
-// app.use(requestLogger)
+const requestLogger = (request, response, next) => {
+  const bodyStr = JSON.stringify(request.body)
+  const requestData = `${request.method} ${request.path} ${response.statusCode} - ${process.uptime()} ms ${bodyStr}`
+  console.log(requestData)
+  next()
+}
+app.use(requestLogger)
 
 
 let persons = []
@@ -44,22 +44,33 @@ app.post('/api/persons', (request, response) => {
 
   person.save().then(savePerson => {
     response.json(savePerson)
-    mongoose.connection.close()
   })
+
 })
 
 app.get('/api/persons/:id', (request, response) => {
   Person.find(request.body.id).then(person => {
     response.json(person)
-    mongoose.connection.close()
   })
+})
+
+app.put('/api/persons/:id', (request, response) => {
+  const paramBody = request.params
+  const reqBody = request.body
+  const resBody = response.req.body
+  Person.findByIdAndUpdate(paramBody.id, { $set: { number: resBody.number } }, { new: true },
+    (error, data) => {
+      error ? console.log(error)
+        : response.status(200).send(data)
+      // console.log(`Update phone number ${resBody.number} for username ${reqBody.name} with success`)
+    })
 })
 
 app.delete('/api/persons/:id', (request, response) => {
   const body = request.params
   Person.findByIdAndRemove(body.id)
     .then(() => {
-      response.status(204).end()
+      response.status(200).end()
     })
     .catch(error => console.log(error))
 })
