@@ -5,7 +5,6 @@ const cors = require('cors')
 app.use(express.json())
 app.use(cors())
 
-const mongoose = require('mongoose')
 const Person = require('./models/person.js')
 
 const requestLogger = (request, response, next) => {
@@ -16,9 +15,6 @@ const requestLogger = (request, response, next) => {
 }
 app.use(requestLogger)
 
-
-let persons = []
-
 app.use(express.static('build'))
 
 app.get('/api/persons', (request, response) => {
@@ -27,7 +23,7 @@ app.get('/api/persons', (request, response) => {
   })
 })
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
   const body = request.body
 
   if (body.name === undefined) {
@@ -45,10 +41,13 @@ app.post('/api/persons', (request, response) => {
     id: body.id
   })
 
-  person.save().then(savePerson => {
-    response.json(savePerson)
-  })
-
+  person
+    .save()
+    .then(savePerson => response.json(savePerson))
+    .then(savedAndFormattedPerson => {
+      response.json(savedAndFormattedPerson)
+    })
+    .catch(error => next(error))
 })
 
 app.get('/api/persons/:id', (request, response, next) => {
@@ -110,10 +109,11 @@ const errorHandler = (error, request, response, next) => {
   console.error(error.message)
   if (error.name === 'CastError') {
     return response.status(400).send({ error: 'malformatted id' })
+  } else if (error.name === 'ValidationError') {
+    next(error)
+    return response.status(400).json({ error: error.message })
   }
-  next(error)
 }
-
 app.use(errorHandler)
 
 
